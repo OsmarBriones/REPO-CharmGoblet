@@ -33,7 +33,7 @@ Settings are in `com.osmar.CharmGoblet.cfg` inside `BepInEx/config`, section `Ch
 - `HealPercentOfMaxHealth` (default `30`, 0 to 100): share of each player's maximum health restored. `0` turns the healing off.
 - `RadiusMeters` (default `10`, 1 to 50): how far from the Goblet carrier other players still get healed. The carrier is always healed.
 
-Section `Debug`: `DebugMode` (default `false`) places a Goblet on the floor in front of you when a level starts (host or singleplayer) and writes extra log lines. For testing.
+Section `Debug`: `DebugMode` (default `false`) places a Goblet on the floor in front of you when a level starts (host or singleplayer) and writes extra log lines. For testing. `SpawnNow` (default `false`, needs `DebugMode`): set it to `true` while a level is running to place one right away; it switches itself back off.
 
 ## Issues & Bug Reports
 The official way to report issues, suggest improvements, or submit feedback is by opening an issue on the official GitHub repository:
