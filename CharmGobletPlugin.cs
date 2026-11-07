@@ -1,5 +1,6 @@
 using BepInEx;
 using CharmCore.Api;
+using HarmonyLib;
 using UnityEngine;
 
 namespace CharmGoblet
@@ -15,6 +16,9 @@ namespace CharmGoblet
 
 		internal static new BepInEx.Logging.ManualLogSource Logger { get; private set; } = null!;
 
+		/// <summary>The registered charm, for the Harmony patch.</summary>
+		internal static GobletCharm Charm { get; private set; } = null!;
+
 		private void Awake()
 		{
 			Logger = base.Logger;
@@ -23,10 +27,11 @@ namespace CharmGoblet
 			this.gameObject.transform.parent = null;
 			this.gameObject.hideFlags = HideFlags.HideAndDontSave;
 
-			// Registering binds Enabled, WearPercent, CooldownSeconds and the Debug section (DebugMode) in this mod's config file.
-			GobletCharm charm = new GobletCharm();
-			CharmsApi.Register(charm, Config);
-			this.gameObject.AddComponent<HealingChalice>().Charm = charm;
+			// Registering binds Enabled, WearPercent, the charm's own settings and the Debug section (DebugMode) in this mod's config file.
+			Charm = new GobletCharm();
+			CharmsApi.Register(Charm, Config);
+
+			new Harmony(PluginGuid).PatchAll();
 
 			Logger.LogInfo($"{PluginName} {PluginVersion} loaded!");
 		}

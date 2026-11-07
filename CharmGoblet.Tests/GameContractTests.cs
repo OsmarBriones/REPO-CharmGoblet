@@ -28,10 +28,46 @@ public class GameContractTests
 	// ---- Members we read or write ----
 
 	[TestMethod]
+	public void RoundDirector_HasTheExtractionCompletionHook()
+	{
+		// Patched (postfix): the moment an extraction point completes. extractionPointsCompleted is read for the duplicate guard.
+		RequireMethod("RoundDirector", "ExtractionCompleted", 0);
+		RequireField("RoundDirector", "extractionPointsCompleted");
+	}
+
+	[TestMethod]
+	public void SemiFunc_HasTheHostCheck()
+	{
+		RequireMethod("SemiFunc", "IsMasterClientOrSingleplayer", 0);
+	}
+
+	[TestMethod]
+	public void GameDirector_HasThePlayerList()
+	{
+		RequireField("GameDirector", "PlayerList");
+	}
+
+	[TestMethod]
+	public void PlayerAvatar_HasTheFieldsUsedToPickTargets()
+	{
+		RequireField("PlayerAvatar", "deadSet");
+		RequireField("PlayerAvatar", "isDisabled");
+		RequireField("PlayerAvatar", "playerHealth");
+	}
+
+	[TestMethod]
+	public void PlayerHealth_HasTheHealthFieldsAndHealOther()
+	{
+		// Health values are read on the host (they are replicated to it); HealOther(int healAmount, bool effect) is the heal API for other players.
+		RequireField("PlayerHealth", "health");
+		RequireField("PlayerHealth", "maxHealth");
+		RequireMethod("PlayerHealth", "HealOther", 2);
+	}
+
+	[TestMethod]
 	public void Valuable_HasTheValueFields()
 	{
-		// TODO: add one RequireField / RequireMethod line for every game member this charm's effect reads, writes or patches,
-		// so a game update that renames or removes one fails here with a clear message.
+		// Wear is applied by CharmCore to the pocketed valuable's value.
 		RequireField("ValuableObject", "dollarValueCurrent");
 	}
 

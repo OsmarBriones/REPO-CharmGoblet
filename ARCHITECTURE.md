@@ -1,24 +1,58 @@
 # CharmGoblet Architecture
 
-A Charm mod (layer 3 of the PocketCharms family): one valuable, one power. It depends on **Pockets** (storage) and **CharmCore** (registry, wear, cooldown display, host settings, debug mode).
+A Charm mod (layer 3 of the PocketCharms family): one valuable, one power. It depends on **Pockets** (storage) and **CharmCore** (registry, wear, host settings, debug mode).
 
 ## The power: Healing Chalice
 
-when an extraction point completes, you and nearby allies are healed.
+When an extraction point completes, each player carrying the Goblet in a pocket heals themselves and every living player within `RadiusMeters` of them by `HealPercentOfMaxHealth` percent of that player's max health. This is a **host effect**: everything runs on the host (or alone).
 
-- `GobletCharm : Charm` registers the prefab name `Valuable Manor Goblet`, the defaults (wear 20%, cooldown none s) and any extra host-synced settings.
-- `HealingChalice` (a `MonoBehaviour` on the plugin object) detects the moment the power triggers and calls `Charm.TryUse()`.
+- `GobletCharm : Charm` registers the prefab name `Valuable Manor Goblet`, wear 20% (no cooldown) and the host-synced settings below.
+- `Patches/RoundDirector_ExtractionCompleted_Patch.cs`: Harmony postfix on `RoundDirector.ExtractionCompleted()`. It returns unless `SemiFunc.IsMasterClientOrSingleplayer()`, then calls `HealingChalice.OnExtractionCompleted`.
+- `HealingChalice` (static class) loops over carriers with `CharmsApi.ForEachCarrier`, heals and wears with `charm.WearValuable`.
+- `Domain/ChaliceMath.cs` holds the game-free maths (`HealAmount`, `IsWithinRange`, `NeedsHealing`, `IsDuplicateCompletion`), unit tested in `ChaliceMathTests`.
 
-TODO: describe how the trigger is detected and what game members the effect reads or writes.
+### Flow
+1. The game runs the extraction state machine on every machine (`ExtractionPoint.StateSetRPC` is sent to all). The completion calls `RoundDirector.ExtractionCompleted()` from two places in `ExtractionPoint`: `StateTaxReturn` (on state start, only reached when `taxReturn` is true) and `StateComplete` (on state start, inside `if (!taxReturn)`). They are mutually exclusive: a tax-return extraction goes TaxReturn then Complete, and Complete skips the call because `taxReturn` is still true. So one completion calls the method once per machine. Hooking the method (not the two call sites) fires once per completion per machine; the non-host machines return at the host guard.
+2. On the host the postfix reads the Goblet settings, then for each carrier (`ForEachCarrier` skips dead players and a disabled charm) heals the carrier plus every living player (not `deadSet`, not `isDisabled`) whose `transform.position` is within `RadiusMeters` of the carrier's, using `PlayerHealth.HealOther(amount, true)`. `HealOther` heals directly when the target is owned by this machine (or in singleplayer); otherwise it sends `HealOtherRPC`, which the master is allowed to send.
+3. A player is skipped when `health + pendingHeal >= maxHealth` (already full). The wear is `charm.WearValuable(valuable, charm.WearPercent)` once per carrier, only if that carrier's chalice healed at least one player.
+
+### Settings
+| Key | Type | Range | Default | Meaning |
+|---|---|---|---|---|
+| `HealPercentOfMaxHealth` | float | 0 to 100 | 30 | Percent of each player's max health restored. 0 turns healing off (no wear). Result rounded to the nearest point, at least 1. |
+| `RadiusMeters` | float | 1 to 50 | 10 | Straight-line distance (between avatar transform positions) from the carrier. The carrier is always healed. |
+| `WearPercent` (CharmCore) | float | 0 to 100 | 20 | Wear per carrier per extraction in which somebody was healed. |
 
 ## Game members used
 
-TODO: list them; they are checked by `CharmGoblet.Tests/GameContractTests.cs`.
+- `RoundDirector.ExtractionCompleted()` (patched, postfix) and `RoundDirector.extractionPointsCompleted` (read, for the duplicate guard).
+- `SemiFunc.IsMasterClientOrSingleplayer()`.
+- `GameDirector.PlayerList`; `PlayerAvatar.deadSet`, `isDisabled`, `playerHealth`.
+- `PlayerHealth.health`, `maxHealth` (read), `PlayerHealth.HealOther(int, bool)`.
+- `ValuableObject.dollarValueCurrent` (wear, done by CharmCore).
+
+All are checked in `CharmGoblet.Tests/GameContractTests.cs`.
 
 ## Debug mode
 
-Provided by CharmCore: the `Debug.DebugMode` setting (off by default) places the valuable on the floor at the start of each level and enables `Charm.LogDebug` output.
+Provided by CharmCore: the `Debug.DebugMode` setting (off by default) places the valuable on the floor at the start of each level and enables `Charm.LogDebug` output. This mod logs each completion, each carrier and each heal with it.
+
+## Decisions
+
+- **Host does everything.** `PlayerHealth.Heal` is owner-only and `HealOtherRPC` accepts only the master or the target's owner, so the host heals allies and itself through `HealOther`. Carriers on clients need no message.
+- **Stacking.** Each carrier's chalice heals separately; two carriers near the same ally heal it twice (the game clamps at max health). A second chalice skips an ally the first already filled (`pendingHeal`), so no wear is spent on a full player.
+- **Wear.** Once per carrier per completion, only if at least one player (the carrier included) was actually healed. Full health everywhere means no heal and no wear. Only the first Goblet of a carrier counts (`ForEachCarrier` hands over one valuable per player).
+- **Range** is plain distance between avatar `transform.position` values, not `PlayerGetAllPlayerAvatarWithinRange` (that one measures from the vision target and has a raycast option; plain distance is simpler to test and explain). No line-of-sight check: walls do not block the healing.
+- **Dead players** (`deadSet`, `isDisabled`, health 0) are skipped; the chalice never revives.
+- **Duplicate guard.** Beyond the analysis above, a repeated event with the same `extractionPointsCompleted` within 2 s is ignored. Two different extraction points always have different counts.
+- **Rounding:** nearest point, halves up, minimum 1 when the percent is above 0.
+- **Heal effect flag** is `true` (the game's heal flash).
 
 ## Known limits
 
 - Looked up by exact prefab name; a game update that renames the prefab needs a mod update.
+- Not verified in game: the build and unit tests prove the logic and that the game members exist.
+- Unverified: that `ExtractionCompleted` runs once per completion on the host (derived from reading the decompiled code, with the duplicate guard as a safety net).
+- Unverified: that the host sees up-to-date `health` and `maxHealth` of remote players (the owner sends them to the others after a change). A stale-high value could skip a hurt player; a stale-low value could charge wear for a heal the game ignores.
+- Unverified: `HealOtherRPC` from the host to a remote target in a real lobby, and the heal effect shown to the target.
+- Unverified: that avatar positions on the host are current for remote players.
