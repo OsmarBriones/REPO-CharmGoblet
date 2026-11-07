@@ -18,13 +18,24 @@ namespace CharmGoblet
 		private static int lastCount = -1;
 		private static float lastTime = -100f;
 
+		/// <summary>Forgets the duplicate-event memory; called when the level ends so nothing carries over to the next level.</summary>
+		internal static void Reset()
+		{
+			lastCount = -1;
+			lastTime = -100f;
+		}
+
 		/// <summary>Host only. <paramref name="completedCount"/> is the number of extraction points completed so far.</summary>
 		internal static void OnExtractionCompleted(GobletCharm charm, int completedCount)
 		{
 			float now = Time.realtimeSinceStartup;
 			if (ChaliceMath.IsDuplicateCompletion(lastCount, lastTime, completedCount, now, DuplicateWindowSeconds))
 			{
-				charm.LogDebug($"Healing Chalice: repeated completion event ({completedCount}) ignored");
+				if (charm.DebugMode)
+				{
+					charm.LogDebug($"Healing Chalice: repeated completion event ({completedCount}) ignored");
+				}
+
 				return;
 			}
 
@@ -51,10 +62,16 @@ namespace CharmGoblet
 					charm.WearValuable(valuable, charm.WearPercent);
 				}
 
-				charm.LogDebug($"Healing Chalice: carrier {carrier.name} healed {healed} player(s)");
+				if (charm.DebugMode)
+				{
+					charm.LogDebug($"Healing Chalice: carrier {carrier.name} healed {healed} player(s)");
+				}
 			});
 
-			charm.LogDebug($"Healing Chalice: extraction {completedCount} completed, {carriers} carrier(s)");
+			if (charm.DebugMode)
+			{
+				charm.LogDebug($"Healing Chalice: extraction {completedCount} completed, {carriers} carrier(s)");
+			}
 		}
 
 		private static int HealAround(PlayerAvatar carrier, float percent, float radius, Dictionary<PlayerAvatar, int> pending, GobletCharm charm)
@@ -92,7 +109,10 @@ namespace CharmGoblet
 				health.HealOther(amount, true);
 				pending[player] = already + amount;
 				healed++;
-				charm.LogDebug($"Healing Chalice: {player.name} healed by {amount} (health {health.health}/{health.maxHealth} before this heal)");
+				if (charm.DebugMode)
+				{
+					charm.LogDebug($"Healing Chalice: {player.name} healed by {amount} (health {health.health}/{health.maxHealth} before this heal)");
+				}
 			}
 
 			return healed;

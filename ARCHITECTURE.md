@@ -56,3 +56,12 @@ Provided by CharmCore: the `Debug.DebugMode` setting (off by default) places the
 - Unverified: that the host sees up-to-date `health` and `maxHealth` of remote players (the owner sends them to the others after a change). A stale-high value could skip a hurt player; a stale-low value could charge wear for a heal the game ignores.
 - Unverified: `HealOtherRPC` from the host to a remote target in a real lobby, and the heal effect shown to the target.
 - Unverified: that avatar positions on the host are current for remote players.
+
+## Runtime hygiene
+Checked against `RepoKit/references/runtime-hygiene.md`:
+1. Lifetime of references: fixed. The only remembered state is the duplicate-completion memory (`lastCount`, `lastTime`; plain numbers, no game objects). `GobletCharm` now overrides `OnLevelEnded` and calls `HealingChalice.Reset()`, so it cannot suppress an extraction in the next level. The per-extraction `Dictionary<PlayerAvatar,int>` is a local and is dropped when the call ends.
+2. Work frequency: ok. Everything is event-driven (one patch on `RoundDirector.ExtractionCompleted`, host only); nothing runs per frame.
+3. Allocations: accepted. Each extraction allocates one dictionary, a closure and a `PlayerList.ToArray()` per carrier; extractions are rare, so this is not worth a shared buffer (a static buffer would hold players). Debug lines are now guarded with `if (charm.DebugMode)`. No `Find` calls.
+4. UI: not applicable.
+5. Patches: ok. The postfix exits at once when not the host; there is no per-frame patch.
+Not verified in game (build and unit tests only).

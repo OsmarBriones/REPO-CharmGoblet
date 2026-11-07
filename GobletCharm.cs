@@ -19,5 +19,11 @@ namespace CharmGoblet
 
 		/// <summary>Healing radius around the carrier, in metres (1 to 50).</summary>
 		internal CharmSetting RadiusMeters { get; }
+
+		/// <summary>Forgets the duplicate-completion memory so nothing of the level survives it.</summary>
+		protected override void OnLevelEnded()
+		{
+			HealingChalice.Reset();
+		}
 	}
 }
