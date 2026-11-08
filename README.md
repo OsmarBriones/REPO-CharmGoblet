@@ -7,13 +7,13 @@ Healing Chalice: the Goblet charges slowly while it stays in a pocket, and when 
 ## How to Use
 
 1. Find the **Goblet** valuable and store it in a free inventory slot with [Pockets](https://thunderstore.io/c/repo/p/OsmarBriones/Pockets/) (grab it, press the slot key).
-2. Keep it there. It **charges slowly** while it stays in a pocket (about four minutes for a full charge by default, roughly what a team takes to gather the loot for an extraction point). The slot shows the charge as a percentage, with a veil that lifts as it fills. When an extraction point completes, you and every teammate within about 10 metres recover health in proportion to the charge: at 100% all of their health, at 50% half of their maximum health, and so on. Players who are dead are not revived, and players already at full health are not affected.
+2. Keep it there. It **charges slowly** while it stays in a pocket (about four minutes for a full charge by default, roughly what a team takes to gather the loot for an extraction point). The charge belongs to the Goblet: if you take it out it keeps what it had (it just stops charging), and if another player stores it, it continues from where it was. The slot shows the charge as a percentage, with a veil that lifts as it fills. When an extraction point completes, you and every teammate within about 10 metres recover health in proportion to the charge: at 100% all of their health, at 50% half of their maximum health, and so on. Players who are dead are not revived, and players already at full health are not affected.
 3. After healing, the Goblet starts charging again from zero.
-4. Take the valuable out of the pocket and the power stops, and its charge is lost.
+4. Take the valuable out of the pocket and the power stops, but the charge is kept for whoever stores it next.
 
 ## Features
 
-- **Healing Chalice:** carry the Goblet for a while, finish an extraction, and the whole group near you gets back health. It cannot be pocketed at the last second: a fresh Goblet heals little, a charged one heals everything. If several players carry a Goblet, each one heals separately, so the healing stacks.
+- **Healing Chalice:** carry the Goblet for a while, finish an extraction, and the whole group near you gets back health. It cannot be pocketed at the last second: a Goblet that has never been charged heals little, one that spent time in pockets heals everything. If several players carry a Goblet, each one heals separately, so the healing stacks.
 - **It costs the valuable:** each extraction in which the Goblet actually healed someone wears away a share of its value, and a worn-out valuable breaks. If everybody nearby was already at full health, nothing is healed and nothing is worn.
 - **Everything is configurable:** wear, how much health is restored and how far the healing reaches. The host's choices apply to everyone.
 

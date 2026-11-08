@@ -12,7 +12,8 @@ Set `DebugMode = true` in the `Debug` section of `BepInEx/config/com.osmar.Charm
 - [ ] Get hurt to about half health, wait for a full charge, then complete an extraction point: you recover all of your health, with the heal flash. The Goblet loses 20% of its original value and its charge goes back to 0. Log (DebugMode): `Healing Chalice: ... charge 100%, healed 1 player(s)`.
 - [ ] Same, but complete the extraction at about 50% charge: you recover about half of your max health.
 - [ ] Store the Goblet only just before the extraction completes: nothing (or almost nothing) is healed and it is not worn.
-- [ ] After a heal the slot shows the charge starting again from 0%. Taking the Goblet out and storing it again also restarts the charge.
+- [ ] After a heal the slot shows the charge starting again from 0%.
+- [ ] Take the Goblet out at about 50%: the slot is free, and when you store it again it continues from about 50% (it did not charge while outside). Let another player (or a second slot) store it: it continues from the charge it had.
 - [ ] Complete an extraction at full health: no heal, no wear, and the charge is kept.
 - [ ] A tax-return extraction (surplus above the goal, not the last point) heals exactly once, not twice.
 - [ ] Goblet carried in hand or lying on the floor: no heal.
