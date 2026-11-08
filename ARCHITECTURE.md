@@ -4,7 +4,9 @@ A Charm mod (layer 3 of the PocketCharms family): one valuable, one power. It de
 
 ## The power: Healing Chalice
 
-When an extraction point completes, each player carrying the Goblet in a pocket heals themselves and every living player within `RadiusMeters` of them by `HealPercentOfMaxHealth` percent of that player's max health. This is a **host effect**: everything runs on the host (or alone).
+**Charging (changed after the first design).** The Goblet is a *charging* charm (`Charm.EnableCharge`): its charge starts at 0 when it is stored, grows linearly with time while it stays in a pocket (`ChargeSeconds`, default 240 s) and is reset to 0 after it heals. Without it the chalice could be pocketed only at the moment an extraction completes. The heal at an extraction is `HealPercentOfMaxHealth` (default 100%) times the carrier's charge fraction; a chalice with no charge does nothing and is not worn, and one that heals nobody keeps its charge. The default 240 s is an estimate: the game has no fixed duration for an extraction point (the fixed phases are a few seconds: about 2 s of success, then warning, extraction and about 3 s of complete; the real time is the gathering of the loot, which depends on the quota and the distance to the loot), so it is a setting.
+
+When an extraction point completes, each player carrying the Goblet in a pocket heals themselves and every living player within `RadiusMeters` of them by `HealPercentOfMaxHealth` x charge percent of that player's max health. This is a **host effect**: everything runs on the host (or alone).
 
 - `GobletCharm : Charm` registers the prefab name `Valuable Manor Goblet`, wear 20% (no cooldown) and the host-synced settings below.
 - `Patches/RoundDirector_ExtractionCompleted_Patch.cs`: Harmony postfix on `RoundDirector.ExtractionCompleted()`. It returns unless `SemiFunc.IsMasterClientOrSingleplayer()`, then calls `HealingChalice.OnExtractionCompleted`.
@@ -19,7 +21,8 @@ When an extraction point completes, each player carrying the Goblet in a pocket 
 ### Settings
 | Key | Type | Range | Default | Meaning |
 |---|---|---|---|---|
-| `HealPercentOfMaxHealth` | float | 0 to 100 | 30 | Percent of each player's max health restored. 0 turns healing off (no wear). Result rounded to the nearest point, at least 1. |
+| `ChargeSeconds` (CharmCore) | float, seconds | 5 to 1800 | 240 | Time in a pocket for a full charge. |
+| `HealPercentOfMaxHealth` | float | 0 to 100 | 100 | Percent of each player's max health restored at FULL charge; partial charge scales it. 0 turns healing off (no wear). Result rounded to the nearest point, at least 1. |
 | `RadiusMeters` | float | 1 to 50 | 10 | Straight-line distance (between avatar transform positions) from the carrier. The carrier is always healed. |
 | `WearPercent` (CharmCore) | float | 0 to 100 | 20 | Wear per carrier per extraction in which somebody was healed. |
 

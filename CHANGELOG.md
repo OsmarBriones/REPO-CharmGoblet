@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+- The Goblet now charges: it needs to stay in a pocket (about four minutes for a full charge, `ChargeSeconds`) and heals in proportion to its charge, up to all of the players' health (`HealPercentOfMaxHealth` default is now 100, it was 30). It is spent when it heals and starts charging again, so it cannot be pocketed only at the last second of an extraction.
 - Runtime hygiene pass: the duplicate-extraction memory is cleared when a level ends; debug lines are guarded.
 
 ### Added

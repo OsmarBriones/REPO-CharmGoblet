@@ -15,6 +15,9 @@ namespace CharmGoblet
 		/// <summary>A repeated completion event with the same count inside this many seconds is ignored.</summary>
 		private const float DuplicateWindowSeconds = 2f;
 
+		/// <summary>Below this charge the chalice does nothing (it would round to no healing).</summary>
+		private const float MinimumCharge = 0.01f;
+
 		private static int lastCount = -1;
 		private static float lastTime = -100f;
 
@@ -56,15 +59,29 @@ namespace CharmGoblet
 			CharmsApi.ForEachCarrier(charm, (carrier, valuable) =>
 			{
 				carriers++;
-				int healed = HealAround(carrier, percent, radius, pending, charm);
+
+				// The chalice works in proportion to how long it has been in the pocket.
+				float charge = CharmsApi.ChargeOf(carrier, charm);
+				if (charge < MinimumCharge)
+				{
+					if (charm.DebugMode)
+					{
+						charm.LogDebug($"Healing Chalice: carrier {carrier.name} has no charge yet");
+					}
+
+					return;
+				}
+
+				int healed = HealAround(carrier, percent * charge, radius, pending, charm);
 				if (healed > 0)
 				{
 					charm.WearValuable(valuable, charm.WearPercent);
+					CharmsApi.ConsumeCharge(charm, valuable);
 				}
 
 				if (charm.DebugMode)
 				{
-					charm.LogDebug($"Healing Chalice: carrier {carrier.name} healed {healed} player(s)");
+					charm.LogDebug($"Healing Chalice: carrier {carrier.name} charge {charge * 100f:0}%, healed {healed} player(s)");
 				}
 			});
 
